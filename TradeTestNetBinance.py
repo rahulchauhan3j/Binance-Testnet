@@ -1,3 +1,5 @@
+# This script uses Binance APIs to trade BTCUSDT on Binance TestNet
+# Market Orders to Buy and Sell fixed quantity of BTCUSDT are sent every 10second
 import time
 import json
 from binance.cm_futures import CMFutures  # uses https://dapi.binance.com
@@ -44,15 +46,13 @@ if __name__ == "__main__":
     # Initiate Client
     umFuturesClient = initiateClient(base_url,key,secret)
 
-    for i in range(5):
+    for i in range(40):  # Repeat 40 times
         # Set Params to Buy
         params = {
         'symbol': 'BTCUSDT',
         'side': 'BUY',
-        'type': 'LIMIT',
-        'timeInForce': 'GTC',
-        'quantity': 0.003,
-        'price': round(float(umFuturesClient.ticker_price("BTCUSDT")["price"]) + 10) # Setting price as ticker price plus 10 so that buy order gets filled
+        'type': 'MARKET',
+        'quantity': 0.003
         }
 
         # Execute Buy
@@ -63,44 +63,20 @@ if __name__ == "__main__":
         # Wait for 10 seconds before next order
         time.sleep(10)
 
-        # Query Order to check if it was FILLED
-        print("\n\n*** Checking Buy Order Status ***")
-        orderStatus = queryOrder("BTCUSDT",buyOrderId)
-        print(f'*** Order status for order id {buyOrderId} is {orderStatus} ***')
-        if (orderStatus == "FILLED"):
-            print("*** Sell order will be send in a while ***")
-        else:
-            print("*** Order will be cancelled in a while ***")
-            cancelOrder('BTCUSDT',buyOrderId)
-            print('*** Order Cancelled ****')
 
+        # Set Params to Sell
+        params = {
+        'symbol': 'BTCUSDT',
+        'side': 'SELL',
+        'type': 'MARKET',
+        'quantity': 0.003
+        }
 
-
-        if (orderStatus == "FILLED"):
-            # Set Params to Sell
-            params = {
-            'symbol': 'BTCUSDT',
-            'side': 'SELL',
-            'type': 'LIMIT',
-            'timeInForce': 'GTC',
-            'quantity': 0.003,
-            'price': round(float(umFuturesClient.ticker_price("BTCUSDT")["price"])-10) # Setting price as ticker price minus 10 so that buy order gets filled
-            }
-
-            # Execute Sell
-            sellOrderId = executeOrder(params)
-            print('\n\n*** SELL Order Sent ****')
-
-            # Query Order to check if Sell Order was FILLED
-            print("*** Checking Sell Order Status ***")
-            sellOrderStatus = "NEW"
-            # Wait for Sell Order to fill
-            while (True):
-                sellOrderStatus = queryOrder("BTCUSDT",sellOrderId)
-                print(f'*** Order status for Sell order id {sellOrderId} is {sellOrderStatus} ***')
-                if (sellOrderStatus == "FILLED"):
-                    break
-            
-            # Wait for 10 seconds before next order
-            time.sleep(10)
+        # Execute Sell
+        sellOrderId = executeOrder(params)
+        print('\n\n*** SELL Order Sent ****')
+        
+                # Wait for 10 seconds before next order
+        time.sleep(10)
+    
 
